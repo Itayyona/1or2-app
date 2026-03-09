@@ -1,33 +1,30 @@
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime
 import json
 
 app = FastAPI()
 
-# ----------- IN MEMORY DATABASE (for now) -----------
 reports = []
 
-# ----------- MODELS -----------
 class Report(BaseModel):
     bathroom_id: int
     lat: float
     lon: float
-    status: str  # "clean", "dirty", "locked", "no_supplies", "long_wait"
-    gender: str  # "male" or "female"
+    status: str
+    gender: str
     timestamp: Optional[str] = None
-
-# ----------- ROUTES -----------
 
 @app.get("/")
 def root():
-    return {"message": "🚽 1or2 API is running!"}
+    return FileResponse("wc_map.html")
 
 @app.get("/bathrooms")
 def get_bathrooms():
-    # Load from OpenStreetMap data
     with open("bathrooms.json", "r") as f:
         bathrooms = json.load(f)
     return {"bathrooms": bathrooms, "count": len(bathrooms)}
