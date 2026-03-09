@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>1or2 App</title>
+    <title>No Shit 💩</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -22,7 +22,7 @@
         body.day #signup { background: #f0f4ff; }
 
         .logo-wrap { text-align: center; }
-        .logo-wrap h1 { font-size: 48px; font-weight: 900; letter-spacing: -2px; }
+        .logo-wrap h1 { font-size: 44px; font-weight: 900; letter-spacing: -2px; }
         body.night .logo-wrap h1 { color: white; }
         body.day .logo-wrap h1 { color: #111; }
         .logo-wrap h1 span { color: #00e5a0; }
@@ -108,7 +108,7 @@
 
 <div id="signup">
     <div class="logo-wrap">
-        <h1>1or2<span>.</span></h1>
+        <h1>No Shit <span>💩</span></h1>
         <div class="slogan">"Nature's calling and we're here to assist"</div>
     </div>
     <p style="color:#6b6b8a;font-size:14px;text-align:center;">Who are you?</p>
@@ -174,7 +174,6 @@
 
     function toggleMode() { applyMode(!isNight); }
 
-    // Haversine distance in meters
     function getDistance(lat1, lon1, lat2, lon2) {
         var R = 6371000;
         var dLat = (lat2 - lat1) * Math.PI / 180;
@@ -310,24 +309,21 @@
     }
 
     function loadReviews(id, batLat, batLon) {
-        // Check proximity
         var nearby = isNearby(batLat, batLon);
         var msgEl = document.getElementById('proximity-msg-' + id);
         var btnEl = document.getElementById('review-btn-' + id);
         var inputEl = document.getElementById('review-input-' + id);
-
         if (msgEl && btnEl) {
             if (!nearby) {
-                msgEl.innerHTML = '<div class="proximity-warning">📍 You must be within 200m to leave a review</div>';
+                msgEl.innerHTML = '<div class="proximity-warning">📍 Must be within 200m to review</div>';
                 btnEl.disabled = true;
                 if (inputEl) inputEl.disabled = true;
             } else {
-                msgEl.innerHTML = '<div style="font-size:11px;color:#00e5a0;margin-bottom:4px;">✅ You are nearby — review unlocked!</div>';
+                msgEl.innerHTML = '<div style="font-size:11px;color:#00e5a0;margin-bottom:4px;">✅ You are nearby!</div>';
                 btnEl.disabled = false;
                 if (inputEl) inputEl.disabled = false;
             }
         }
-
         fetch(API + '/reviews/' + id)
         .then(r => r.json())
         .then(data => {
@@ -373,7 +369,7 @@
 
     function confirmAddBathroom() {
         if (!pendingLocation) {
-            alert('Please tap the map to set the location first!');
+            alert('Please tap the map first!');
             return;
         }
         var name = document.getElementById('add-name').value.trim() || 'Public Toilet';
