@@ -3,16 +3,333 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Test</title>
+    <title>No Sh*t 💩</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Helvetica Neue', sans-serif; }
+        #map { height: 100vh; width: 100%; display: none; }
+        body.night { background: #0d0a1a; color: #e8e8f0; }
+        body.day { background: #f5f5f0; color: #111; }
+        #signup { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 20px; }
+        body.night #signup { background: #0d0a1a; }
+        body.day #signup { background: #f0f4ff; }
+        .logo-wrap { text-align: center; }
+        .logo-wrap h1 { font-size: 44px; font-weight: 900; letter-spacing: -2px; }
+        body.night .logo-wrap h1 { color: white; }
+        body.day .logo-wrap h1 { color: #111; }
+        .logo-wrap h1 span { color: #00e5a0; }
+        .slogan { font-size: 14px; font-style: italic; margin-top: 6px; color: #6b6b8a; }
+        .gender-pick { display: flex; gap: 20px; }
+        .gender-btn { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 28px 36px; border: 2px solid transparent; border-radius: 20px; cursor: pointer; transition: all 0.2s; }
+        body.night .gender-btn { background: #1a1428; border-color: #2a2040; }
+        body.day .gender-btn { background: white; border-color: #ddd; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        .gender-btn:hover { border-color: #00e5a0; transform: translateY(-4px); }
+        .gender-btn img { width: 55px; height: auto; }
+        body.night .gender-btn img { filter: invert(1); }
+        .gender-btn span { font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #6b6b8a; }
+        #gps-status { font-size: 13px; color: #6b6b8a; text-align: center; padding: 8px 16px; border-radius: 20px; border: 1px solid #2a2040; }
+        body.night #gps-status { background: #1a1428; }
+        body.day #gps-status { background: white; }
+        #status { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); padding: 8px 18px; border-radius: 20px; font-size: 13px; z-index: 1000; white-space: nowrap; border: 1px solid #2a2040; }
+        body.night #status { background: #1a1428; color: #6b6b8a; }
+        body.day #status { background: white; color: #444; }
+        #mode-toggle, #add-btn { position: absolute; padding: 7px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; z-index: 1000; border: 1px solid #2a2040; font-weight: 600; }
+        #mode-toggle { top: 12px; right: 16px; }
+        #add-btn { top: 12px; right: 120px; background: #00e5a0; color: #000; border-color: #00e5a0; }
+        body.night #mode-toggle { background: #1a1428; color: white; }
+        body.day #mode-toggle { background: white; color: #111; }
+        #add-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; border-radius: 16px; padding: 24px; width: 280px; }
+        body.night #add-modal { background: #1a1428; border: 1px solid #2a2040; color: white; }
+        body.day #add-modal { background: white; border: 1px solid #ddd; color: #111; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+        #add-modal h3 { font-size: 16px; margin-bottom: 14px; color: #00e5a0; }
+        .modal-input { width: 100%; padding: 8px 12px; margin: 6px 0; border-radius: 8px; font-size: 13px; font-family: inherit; border: 1px solid #2a2040; background: transparent; color: inherit; }
+        .modal-btn { width: 100%; padding: 10px; margin-top: 8px; border-radius: 10px; border: none; font-weight: 700; font-size: 14px; cursor: pointer; }
+        .modal-btn.confirm { background: #00e5a0; color: #000; }
+        .modal-btn.cancel { background: transparent; color: #6b6b8a; border: 1px solid #2a2040; }
+        .popup-box { font-family: 'Helvetica Neue', sans-serif; min-width: 230px; padding: 4px; }
+        .popup-name { font-size: 15px; font-weight: 800; color: #00e5a0; margin-bottom: 4px; }
+        .user-added-badge { font-size: 10px; background: #00e5a0; color: #000; padding: 2px 7px; border-radius: 10px; font-weight: 700; margin-bottom: 8px; display: inline-block; }
+        .report-btn { display: block; width: 100%; padding: 7px 10px; margin: 3px 0; border: 1px solid #2a2040; border-radius: 8px; background: transparent; color: inherit; font-size: 12px; cursor: pointer; text-align: left; transition: all 0.15s; }
+        .report-btn:hover { border-color: #00e5a0; color: #00e5a0; }
+        .report-sent { color: #00e5a0; font-size: 12px; margin-top: 6px; text-align: center; }
+        .review-section { margin-top: 10px; border-top: 1px solid #2a2040; padding-top: 10px; }
+        .review-section h4 { font-size: 12px; color: #6b6b8a; margin-bottom: 6px; }
+        .proximity-warning { font-size: 11px; color: #ff6b6b; margin-bottom: 6px; }
+        .review-input { width: 100%; padding: 6px 8px; border: 1px solid #2a2040; border-radius: 8px; background: transparent; color: inherit; font-size: 12px; resize: none; font-family: inherit; }
+        .review-submit { margin-top: 6px; padding: 7px 14px; background: #00e5a0; color: #000; border: none; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; width: 100%; }
+        .review-submit:disabled { background: #2a2040; color: #6b6b8a; cursor: not-allowed; }
+        .review-list { margin-top: 8px; max-height: 80px; overflow-y: auto; }
+        .review-item { font-size: 11px; color: #6b6b8a; padding: 4px 0; border-bottom: 1px solid #1e1e2e; }
+    </style>
 </head>
-<body style="background:#0d0a1a;color:white;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:20px;">
-    <h1>Click test</h1>
-    <button onclick="alert('IT WORKS!')" style="padding:20px 40px;font-size:20px;cursor:pointer;">
-        Click me
-    </button>
-    <div id="result"></div>
-    <script>
-        document.getElementById('result').innerText = 'JS is running';
-    </script>
+<body class="night">
+<div id="signup">
+    <div class="logo-wrap">
+        <h1>No Sh*t <span>💩</span></h1>
+        <div class="slogan">"Nature's calling and we're here to assist"</div>
+    </div>
+    <div id="gps-status">📍 Requesting your location...</div>
+    <p style="color:#6b6b8a;font-size:14px;text-align:center;">Who are you?</p>
+    <div class="gender-pick">
+        <div class="gender-btn" onclick="startMap('male')">
+            <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iMjY3LjAwMDAwMHB0IiBoZWlnaHQ9IjU1MS4wMDAwMDBwdCIgdmlld0JveD0iMCAwIDI2Ny4wMDAwMDAgNTUxLjAwMDAwMCIKIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPgo8bWV0YWRhdGE+CkNyZWF0ZWQgYnkgcG90cmFjZSAxLjE2LCB3cml0dGVuIGJ5IFBldGVyIFNlbGluZ2VyIDIwMDEtMjAxOQo8L21ldGFkYXRhPgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1NTEuMDAwMDAwKSBzY2FsZSgwLjEwMDAwMCwtMC4xMDAwMDApIgpmaWxsPSIjMDAwMDAwIiBzdHJva2U9Im5vbmUiPgo8cGF0aCBkPSJNMTA1MyA1MDY5IGMtNzEgLTI3IC0xNTUgLTEwNiAtMTkwIC0xNzcgLTIzIC00OSAtMjcgLTcwIC0yOCAtMTQ3IDAKLTc3IDQgLTk4IDI3IC0xNDcgNzAgLTE1MSAyNDEgLTIzNCAzOTggLTE5NCA3MyAxOSAxNTYgNzAgMTk1IDEyMiA1MyA2OSA2OQoxMjIgNjkgMjE5IDAgNzggLTMgOTggLTI3IDE0NyAtMzYgNzMgLTExOSAxNTAgLTE5MiAxNzcgLTc0IDI4IC0xODAgMjcgLTI1MgoweiIvPgo8cGF0aCBkPSJNNjIwIDQyMjAgYy0xMzEgLTI0IC0yMzQgLTk0IC0zMDMgLTIwNiAtNTggLTk0IC01NyAtNjkgLTU3IC0xMDE2IDAKLTk0NiAtMyAtODk0IDU3IC05NDkgNDEgLTM4IDY2IC00OSAxMTcgLTQ5IDgxIDAgMTM0IDMzIDE2NyAxMDUgMTggMzggMTkgODMKMTkgODMxIDAgNjAxIDMgNzkzIDEyIDgwMiAxOSAxOSA2NiAxNSA3OCAtNyA3IC0xMyAxMCAtNTU4IDEwIC0xNjkwIDAgLTExNTUKMyAtMTY3OCAxMSAtMTY5OCAxMyAtMzQgNTUgLTgwIDkxIC05OSAxNSAtOCA1MSAtMTQgODEgLTE0IDQ0IDAgNjIgNSA5NSAzMAoyMyAxNiA1MSA0OCA2MiA2OSAyMCAzOSAyMCA1NiAyMCA4ODkgMCA1ODAgMyA4NTkgMTEgODgwIDI5IDgzIDE0OSA4MyAxNzggMAo4IC0yMSAxMSAtMzAwIDExIC04NzggMCAtOTIzIC0yIC04ODcgNTcgLTk0MSA0MiAtNDAgNjYgLTQ5IDEyNSAtNDkgNjkgMCAxMzAKMzcgMTU4IDk2IDIwIDQwIDIwIDY5IDIwIDE3MTMgMCAxMTM0IDMgMTY3OSAxMCAxNjkyIDEyIDIyIDU5IDI2IDc4IDcgOSAtOQoxMiAtMjAxIDEyIC04MDIgMCAtNzgyIDAgLTc5MCAyMSAtODMzIDMxIC02NCA3OCAtOTYgMTUwIC0xMDEgNTAgLTQgNjUgMCAxMDQKMjIgMjggMTcgNTIgNDEgNjUgNjYgMjAgMzggMjAgNTkgMjAgOTEwIDAgODU0IDAgODcyIC0yMSA5MzIgLTQzIDEyOCAtMTM3CjIyMiAtMjc0IDI3NCAtNDYgMTcgLTg5IDE4IC01OTUgMjAgLTMwMCAxIC01NjUgLTIgLTU5MCAtNnoiLz4KPC9nPgo8L3N2Zz4K" alt="Male"/>
+            <span>Male</span>
+        </div>
+        <div class="gender-btn" onclick="startMap('female')">
+            <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iMzM4LjAwMDAwMHB0IiBoZWlnaHQ9IjU0Mi4wMDAwMDBwdCIgdmlld0JveD0iMCAwIDMzOC4wMDAwMDAgNTQyLjAwMDAwMCIKIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPgo8bWV0YWRhdGE+CkNyZWF0ZWQgYnkgcG90cmFjZSAxLjE2LCB3cml0dGVuIGJ5IFBldGVyIFNlbGluZ2VyIDIwMDEtMjAxOQo8L21ldGFkYXRhPgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1NDIuMDAwMDAwKSBzY2FsZSgwLjEwMDAwMCwtMC4xMDAwMDApIgpmaWxsPSIjMDAwMDAwIiBzdHJva2U9Im5vbmUiPgo8cGF0aCBkPSJNMTYxMCA1MDI2IGMtMTE3IC0yNSAtMjE3IC0xMDUgLTI2OCAtMjE0IC0yNCAtNTAgLTI3IC03MCAtMjcgLTE1NwowIC05MyAyIC0xMDUgMzMgLTE2NyA2NyAtMTM3IDE4NyAtMjEyIDM0MiAtMjEyIDE1NSAwIDI3NSA3NSAzNDIgMjEyIDMxIDYyCjMzIDc0IDMzIDE2NyAwIDg3IC0zIDEwNyAtMjYgMTU1IC01NSAxMTUgLTE2MCAxOTcgLTI4MyAyMTkgLTcwIDEzIC03NSAxMwotMTQ2IC0zeiIvPgo8cGF0aCBkPSJNMTEzNCA0MTE5IGMtNzMgLTI4IC0xMzcgLTg4IC0xNzMgLTE2MiAtMjEgLTQzIC03OSAtMjU3IC0xOTEgLTcwOAotMTUxIC02MDIgLTE2MSAtNjQ5IC0xNTAgLTY4OCAzOSAtMTQ1IDIyMSAtMTc4IDMwNiAtNTQgMTMgMjAgODcgMjk3IDIxNyA4MjAKMTA4IDQzNCAxOTcgNzk0IDE5NyA4MDEgMCAyMCAtMTQ2IDE0IC0yMDYgLTl6Ii8+CjxwYXRoIGQ9Ik0xNDU1IDQxMjggYy0yIC03IC0xNDAgLTU1NSAtMzA1IC0xMjE4IC0xNjUgLTY2MyAtMzAzIC0xMjEzIC0zMDYKLTEyMjIgLTUgLTE2IDEyIC0xOCAyMjggLTIwIGwyMzMgLTMgNSAtNjM1IGM1IC02MzEgNSAtNjM1IDI3IC02NzAgNzQgLTExOQoyNjQgLTkwIDMwMiA0NSA3IDI3IDExIDIzOSAxMSA2NTMgbDAgNjEyIDQwIDAgMzkgMCAzIC02MzIgYzMgLTU3OCA1IC02MzYgMjAKLTY2NSAzOCAtNjggMTIxIC0xMDQgMTkzIC04MyA0MCAxMiA4NyA0OCAxMDggODUgOSAxNCAxMyAxOTggMTcgNjU1IGw1IDYzNQoyMzMgMyAyMzIgMiAtNyAyOCBjLTMgMTUgLTE0MiA1NjkgLTMwOCAxMjMyIGwtMzAxIDEyMDUgLTIzMiAzIGMtMTgxIDIgLTIzMwowIC0yMzcgLTEweiIvPgo8cGF0aCBkPSJNMjA0MCA0MTI5IGMwIC03IDg5IC0zNjkgMTk3IC04MDMgMTI5IC01MTYgMjA0IC04MDAgMjE4IC04MTkgMzAKLTQ1IDY4IC02OSAxMTggLTc0IDg4IC0xMCAxNjQgNDEgMTg3IDEyOCAxMCAzOCAwIDg4IC0xNTEgNjkyIC05NCAzNzggLTE3Mgo2NzIgLTE4NiA3MDAgLTM0IDY5IC04MyAxMTkgLTE1MCAxNTMgLTQ4IDI0IC03MyAzMCAtMTQ1IDMyIC02OCAzIC04OCAxIC04OAotOXoiLz4KPC9nPgo8L3N2Zz4K" alt="Female"/>
+            <span>Female</span>
+        </div>
+    </div>
+</div>
+<div id="map"></div>
+<div id="status" style="display:none;">Loading bathrooms...</div>
+<button id="mode-toggle" style="display:none;" onclick="toggleMode()">🌙 Night</button>
+<button id="add-btn" style="display:none;" onclick="showAddModal()">+ Add Bathroom</button>
+<div id="add-modal">
+    <h3>🚽 Add a Bathroom</h3>
+    <p style="font-size:12px;color:#6b6b8a;margin-bottom:10px;">Tap the map to drop a pin, then fill details.</p>
+    <input class="modal-input" id="add-name" placeholder="Name (e.g. Gordon Beach Toilet)"/>
+    <input class="modal-input" id="add-note" placeholder="Note (e.g. free, clean, accessible)"/>
+    <div id="add-coords" style="font-size:11px;color:#6b6b8a;margin-top:6px;">📍 Tap map to set location</div>
+    <button class="modal-btn confirm" onclick="confirmAddBathroom()">✅ Add Bathroom</button>
+    <button class="modal-btn cancel" onclick="hideAddModal()">Cancel</button>
+</div>
+<script>
+    var map, userMarker;
+    var userGender = 'male';
+    var userLat = null, userLon = null;
+    var API = 'https://1or2-app-production.up.railway.app';
+    var isNight = true;
+    var addingMode = false;
+    var pendingLocation = null;
+    var PROXIMITY_METERS = 200;
+    var maleIcon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iMjY3LjAwMDAwMHB0IiBoZWlnaHQ9IjU1MS4wMDAwMDBwdCIgdmlld0JveD0iMCAwIDI2Ny4wMDAwMDAgNTUxLjAwMDAwMCIKIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPgo8bWV0YWRhdGE+CkNyZWF0ZWQgYnkgcG90cmFjZSAxLjE2LCB3cml0dGVuIGJ5IFBldGVyIFNlbGluZ2VyIDIwMDEtMjAxOQo8L21ldGFkYXRhPgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1NTEuMDAwMDAwKSBzY2FsZSgwLjEwMDAwMCwtMC4xMDAwMDApIgpmaWxsPSIjMDAwMDAwIiBzdHJva2U9Im5vbmUiPgo8cGF0aCBkPSJNMTA1MyA1MDY5IGMtNzEgLTI3IC0xNTUgLTEwNiAtMTkwIC0xNzcgLTIzIC00OSAtMjcgLTcwIC0yOCAtMTQ3IDAKLTc3IDQgLTk4IDI3IC0xNDcgNzAgLTE1MSAyNDEgLTIzNCAzOTggLTE5NCA3MyAxOSAxNTYgNzAgMTk1IDEyMiA1MyA2OSA2OQoxMjIgNjkgMjE5IDAgNzggLTMgOTggLTI3IDE0NyAtMzYgNzMgLTExOSAxNTAgLTE5MiAxNzcgLTc0IDI4IC0xODAgMjcgLTI1MgoweiIvPgo8cGF0aCBkPSJNNjIwIDQyMjAgYy0xMzEgLTI0IC0yMzQgLTk0IC0zMDMgLTIwNiAtNTggLTk0IC01NyAtNjkgLTU3IC0xMDE2IDAKLTk0NiAtMyAtODk0IDU3IC05NDkgNDEgLTM4IDY2IC00OSAxMTcgLTQ5IDgxIDAgMTM0IDMzIDE2NyAxMDUgMTggMzggMTkgODMKMTkgODMxIDAgNjAxIDMgNzkzIDEyIDgwMiAxOSAxOSA2NiAxNSA3OCAtNyA3IC0xMyAxMCAtNTU4IDEwIC0xNjkwIDAgLTExNTUKMyAtMTY3OCAxMSAtMTY5OCAxMyAtMzQgNTUgLTgwIDkxIC05OSAxNSAtOCA1MSAtMTQgODEgLTE0IDQ0IDAgNjIgNSA5NSAzMAoyMyAxNiA1MSA0OCA2MiA2OSAyMCAzOSAyMCA1NiAyMCA4ODkgMCA1ODAgMyA4NTkgMTEgODgwIDI5IDgzIDE0OSA4MyAxNzggMAo4IC0yMSAxMSAtMzAwIDExIC04NzggMCAtOTIzIC0yIC04ODcgNTcgLTk0MSA0MiAtNDAgNjYgLTQ5IDEyNSAtNDkgNjkgMCAxMzAKMzcgMTU4IDk2IDIwIDQwIDIwIDY5IDIwIDE3MTMgMCAxMTM0IDMgMTY3OSAxMCAxNjkyIDEyIDIyIDU5IDI2IDc4IDcgOSAtOQoxMiAtMjAxIDEyIC04MDIgMCAtNzgyIDAgLTc5MCAyMSAtODMzIDMxIC02NCA3OCAtOTYgMTUwIC0xMDEgNTAgLTQgNjUgMCAxMDQKMjIgMjggMTcgNTIgNDEgNjUgNjYgMjAgMzggMjAgNTkgMjAgOTEwIDAgODU0IDAgODcyIC0yMSA5MzIgLTQzIDEyOCAtMTM3CjIyMiAtMjc0IDI3NCAtNDYgMTcgLTg5IDE4IC01OTUgMjAgLTMwMCAxIC01NjUgLTIgLTU5MCAtNnoiLz4KPC9nPgo8L3N2Zz4K";
+    var femaleIcon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iMzM4LjAwMDAwMHB0IiBoZWlnaHQ9IjU0Mi4wMDAwMDBwdCIgdmlld0JveD0iMCAwIDMzOC4wMDAwMDAgNTQyLjAwMDAwMCIKIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPgo8bWV0YWRhdGE+CkNyZWF0ZWQgYnkgcG90cmFjZSAxLjE2LCB3cml0dGVuIGJ5IFBldGVyIFNlbGluZ2VyIDIwMDEtMjAxOQo8L21ldGFkYXRhPgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1NDIuMDAwMDAwKSBzY2FsZSgwLjEwMDAwMCwtMC4xMDAwMDApIgpmaWxsPSIjMDAwMDAwIiBzdHJva2U9Im5vbmUiPgo8cGF0aCBkPSJNMTYxMCA1MDI2IGMtMTE3IC0yNSAtMjE3IC0xMDUgLTI2OCAtMjE0IC0yNCAtNTAgLTI3IC03MCAtMjcgLTE1NwowIC05MyAyIC0xMDUgMzMgLTE2NyA2NyAtMTM3IDE4NyAtMjEyIDM0MiAtMjEyIDE1NSAwIDI3NSA3NSAzNDIgMjEyIDMxIDYyCjMzIDc0IDMzIDE2NyAwIDg3IC0zIDEwNyAtMjYgMTU1IC01NSAxMTUgLTE2MCAxOTcgLTI4MyAyMTkgLTcwIDEzIC03NSAxMwotMTQ2IC0zeiIvPgo8cGF0aCBkPSJNMTEzNCA0MTE5IGMtNzMgLTI4IC0xMzcgLTg4IC0xNzMgLTE2MiAtMjEgLTQzIC03OSAtMjU3IC0xOTEgLTcwOAotMTUxIC02MDIgLTE2MSAtNjQ5IC0xNTAgLTY4OCAzOSAtMTQ1IDIyMSAtMTc4IDMwNiAtNTQgMTMgMjAgODcgMjk3IDIxNyA4MjAKMTA4IDQzNCAxOTcgNzk0IDE5NyA4MDEgMCAyMCAtMTQ2IDE0IC0yMDYgLTl6Ii8+CjxwYXRoIGQ9Ik0xNDU1IDQxMjggYy0yIC03IC0xNDAgLTU1NSAtMzA1IC0xMjE4IC0xNjUgLTY2MyAtMzAzIC0xMjEzIC0zMDYKLTEyMjIgLTUgLTE2IDEyIC0xOCAyMjggLTIwIGwyMzMgLTMgNSAtNjM1IGM1IC02MzEgNSAtNjM1IDI3IC02NzAgNzQgLTExOQoyNjQgLTkwIDMwMiA0NSA3IDI3IDExIDIzOSAxMSA2NTMgbDAgNjEyIDQwIDAgMzkgMCAzIC02MzIgYzMgLTU3OCA1IC02MzYgMjAKLTY2NSAzOCAtNjggMTIxIC0xMDQgMTkzIC04MyA0MCAxMiA4NyA0OCAxMDggODUgOSAxNCAxMyAxOTggMTcgNjU1IGw1IDYzNQoyMzMgMyAyMzIgMiAtNyAyOCBjLTMgMTUgLTE0MiA1NjkgLTMwOCAxMjMyIGwtMzAxIDEyMDUgLTIzMiAzIGMtMTgxIDIgLTIzMwowIC0yMzcgLTEweiIvPgo8cGF0aCBkPSJNMjA0MCA0MTI5IGMwIC03IDg5IC0zNjkgMTk3IC04MDMgMTI5IC01MTYgMjA0IC04MDAgMjE4IC04MTkgMzAKLTQ1IDY4IC02OSAxMTggLTc0IDg4IC0xMCAxNjQgNDEgMTg3IDEyOCAxMCAzOCAwIDg4IC0xNTEgNjkyIC05NCAzNzggLTE3Mgo2NzIgLTE4NiA3MDAgLTM0IDY5IC04MyAxMTkgLTE1MCAxNTMgLTQ4IDI0IC03MyAzMCAtMTQ1IDMyIC02OCAzIC04OCAxIC04OAotOXoiLz4KPC9nPgo8L3N2Zz4K";
+
+    try {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    userLat = pos.coords.latitude;
+                    userLon = pos.coords.longitude;
+                    var el = document.getElementById('gps-status');
+                    if (el) el.innerText = '✅ Location found!';
+                    setTimeout(function() {
+                        var el = document.getElementById('gps-status');
+                        if (el) el.style.display = 'none';
+                    }, 2000);
+                },
+                function(err) {
+                    var el = document.getElementById('gps-status');
+                    if (el) el.innerText = '⚠️ Enable location for best experience';
+                },
+                {enableHighAccuracy: true, timeout: 15000}
+            );
+        }
+    } catch(e) { console.log('GPS init error:', e); }
+
+    function detectDayNight() {
+        var hour = new Date().getHours();
+        isNight = hour < 6 || hour >= 20;
+        applyMode(isNight);
+    }
+
+    function applyMode(night) {
+        isNight = night;
+        document.body.className = night ? 'night' : 'day';
+        document.getElementById('mode-toggle').textContent = night ? '☀️ Day' : '🌙 Night';
+        if (map) {
+            map.eachLayer(function(layer) { if (layer._url) map.removeLayer(layer); });
+            L.tileLayer(night
+                ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                {attribution: '© OpenStreetMap'}
+            ).addTo(map);
+        }
+    }
+
+    function toggleMode() { applyMode(!isNight); }
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+        var R = 6371000;
+        var dLat = (lat2-lat1)*Math.PI/180;
+        var dLon = (lon2-lon1)*Math.PI/180;
+        var a = Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+        return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+    }
+
+    function isNearby(batLat, batLon) {
+        if (userLat===null) return false;
+        return getDistance(userLat,userLon,batLat,batLon) <= PROXIMITY_METERS;
+    }
+
+    function startMap(gender) {
+        try {
+            userGender = gender;
+            document.getElementById('signup').style.display = 'none';
+            document.getElementById('map').style.display = 'block';
+            document.getElementById('status').style.display = 'block';
+            document.getElementById('mode-toggle').style.display = 'block';
+            document.getElementById('add-btn').style.display = 'block';
+            detectDayNight();
+            var startLat = userLat !== null ? userLat : 31.5;
+            var startLon = userLon !== null ? userLon : 34.9;
+            var startZoom = userLat !== null ? 14 : 8;
+            map = L.map('map').setView([startLat, startLon], startZoom);
+            L.tileLayer(isNight
+                ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                {attribution: '© OpenStreetMap'}
+            ).addTo(map);
+            map.on('click', function(e) {
+                if (addingMode) {
+                    pendingLocation = e.latlng;
+                    document.getElementById('add-coords').innerText = '📍 '+e.latlng.lat.toFixed(5)+', '+e.latlng.lng.toFixed(5);
+                }
+            });
+            loadBathrooms();
+            var gpsIcon = L.icon({iconUrl: gender==='male' ? maleIcon : femaleIcon, iconSize:[32,64], iconAnchor:[16,64]});
+            navigator.geolocation.watchPosition(
+                function(pos) {
+                    userLat = pos.coords.latitude;
+                    userLon = pos.coords.longitude;
+                    if (userMarker) {
+                        userMarker.setLatLng([userLat,userLon]);
+                    } else {
+                        userMarker = L.marker([userLat,userLon],{icon:gpsIcon}).addTo(map).bindPopup('📍 You are here');
+                        map.setView([userLat,userLon],15);
+                        document.getElementById('status').innerText = '✅ Located!';
+                        setTimeout(function(){ document.getElementById('status').style.display='none'; },2000);
+                    }
+                },
+                function(err) { console.log('GPS watch error:',err.message); },
+                {enableHighAccuracy:true,timeout:15000}
+            );
+        } catch(e) {
+            console.log('startMap error:',e);
+            alert('Error: '+e.message);
+        }
+    }
+
+    function loadBathrooms() {
+        fetch(API+'/bathrooms')
+            .then(function(r){return r.json();})
+            .then(function(data){
+                data.bathrooms.forEach(addBathroomMarker);
+                document.getElementById('status').innerText='✅ '+data.count+' bathrooms in Israel';
+                setTimeout(function(){ document.getElementById('status').style.display='none'; },3000);
+            })
+            .catch(function(err){
+                console.log('Load error:',err);
+                document.getElementById('status').innerText='❌ Could not load bathrooms';
+            });
+    }
+
+    function addBathroomMarker(b) {
+        var toiletIcon = L.divIcon({html:'<div style="font-size:22px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.4));">'+(b.user_added?'🆕':'🚽')+'</div>',iconSize:[28,28],iconAnchor:[14,14],className:''});
+        var marker = L.marker([b.lat,b.lon],{icon:toiletIcon}).addTo(map);
+        marker.bindPopup(buildPopup(b),{maxWidth:260});
+        marker.on('popupopen',function(){ loadReports(b.id); loadReviews(b.id,b.lat,b.lon); });
+    }
+
+    function buildPopup(b) {
+        return '<div class="popup-box">'
+            +'<div class="popup-name">🚽 '+b.name+'</div>'
+            +(b.user_added?'<div class="user-added-badge">👤 User Added</div>':'')
+            +'<div id="reports-'+b.id+'" style="font-size:11px;color:#6b6b8a;margin-bottom:8px;">Loading...</div>'
+            +'<button class="report-btn" onclick="submitReport('+b.id+','+b.lat+','+b.lon+','✅ Clean')">✅ Clean</button>'
+            +'<button class="report-btn" onclick="submitReport('+b.id+','+b.lat+','+b.lon+','🧻 No supplies')">🧻 No supplies</button>'
+            +'<button class="report-btn" onclick="submitReport('+b.id+','+b.lat+','+b.lon+','🔒 Locked')">🔒 Locked</button>'
+            +'<button class="report-btn" onclick="submitReport('+b.id+','+b.lat+','+b.lon+','🕐 Long wait')">🕐 Long wait</button>'
+            +'<button class="report-btn" onclick="submitReport('+b.id+','+b.lat+','+b.lon+','✨ Just cleaned')">✨ Just cleaned</button>'
+            +'<div id="sent-'+b.id+'"></div>'
+            +'<div class="review-section"><h4>💬 Reviews</h4>'
+            +'<div class="review-list" id="review-list-'+b.id+'">Loading...</div>'
+            +'<div id="proximity-msg-'+b.id+'"></div>'
+            +'<textarea class="review-input" id="review-input-'+b.id+'" rows="2" placeholder="Leave a review..."></textarea>'
+            +'<button class="review-submit" id="review-btn-'+b.id+'" onclick="submitReview('+b.id+')">Post Review</button>'
+            +'</div></div>';
+    }
+
+    function submitReport(id,lat,lon,status) {
+        fetch(API+'/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bathroom_id:id,lat:lat,lon:lon,status:status,gender:userGender})})
+        .then(function(r){return r.json();}).then(function(){
+            var el=document.getElementById('sent-'+id);
+            if(el) el.innerHTML='<div class="report-sent">✅ Report sent!</div>';
+            loadReports(id);
+        });
+    }
+
+    function loadReports(id) {
+        fetch(API+'/reports?bathroom_id='+id)
+        .then(function(r){return r.json();})
+        .then(function(data){
+            var el=document.getElementById('reports-'+id);
+            if(!el) return;
+            if(data.reports.length===0){ el.innerText='No reports yet — be the first!'; }
+            else{
+                var latest=data.reports[data.reports.length-1];
+                el.innerHTML='<b>Latest:</b> '+latest.status+' <small style="color:#6b6b8a">'+latest.timestamp.slice(11,16)+'</small>';
+            }
+        });
+    }
+
+    function loadReviews(id,batLat,batLon) {
+        var nearby=isNearby(batLat,batLon);
+        var msgEl=document.getElementById('proximity-msg-'+id);
+        var btnEl=document.getElementById('review-btn-'+id);
+        var inputEl=document.getElementById('review-input-'+id);
+        if(msgEl&&btnEl){
+            if(!nearby){
+                msgEl.innerHTML='<div class="proximity-warning">📍 Must be within 200m to review</div>';
+                btnEl.disabled=true;
+                if(inputEl) inputEl.disabled=true;
+            }else{
+                msgEl.innerHTML='<div style="font-size:11px;color:#00e5a0;margin-bottom:4px;">✅ You are nearby!</div>';
+                btnEl.disabled=false;
+                if(inputEl) inputEl.disabled=false;
+            }
+        }
+        fetch(API+'/reviews/'+id)
+        .then(function(r){return r.json();})
+        .then(function(data){
+            var el=document.getElementById('review-list-'+id);
+            if(!el) return;
+            if(data.reviews.length===0){ el.innerText='No reviews yet'; }
+            else{ el.innerHTML=data.reviews.slice(-3).reverse().map(function(r){return '<div class="review-item">'+(r.gender==='male'?'🚹':'🚺')+' '+r.text+'</div>';}).join(''); }
+        });
+    }
+
+    function submitReview(id) {
+        var input=document.getElementById('review-input-'+id);
+        var text=input.value.trim();
+        if(!text) return;
+        fetch(API+'/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bathroom_id:id,text:text,gender:userGender})})
+        .then(function(r){return r.json();}).then(function(){ input.value=''; loadReviews(id); });
+    }
+
+    function showAddModal() {
+        addingMode=true; pendingLocation=null;
+        document.getElementById('add-modal').style.display='block';
+        document.getElementById('add-coords').innerText='📍 Tap map to set location';
+        document.getElementById('add-name').value='';
+        document.getElementById('add-note').value='';
+    }
+
+    function hideAddModal() {
+        addingMode=false;
+        document.getElementById('add-modal').style.display='none';
+    }
+
+    function confirmAddBathroom() {
+        if(!pendingLocation){ alert('Please tap the map first!'); return; }
+        var name=document.getElementById('add-name').value.trim()||'Public Toilet';
+        var note=document.getElementById('add-note').value.trim();
+        fetch(API+'/bathroom/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat:pendingLocation.lat,lon:pendingLocation.lng,name:name,note:note})})
+        .then(function(r){return r.json();}).then(function(data){ addBathroomMarker(data.bathroom); hideAddModal(); });
+    }
+</script>
 </body>
 </html>
