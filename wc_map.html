@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>No Shit 💩</title>
+    <title>No Sh*t 💩</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -41,13 +41,20 @@
         body.night .gender-btn img { filter: invert(1); }
         .gender-btn span { font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #6b6b8a; }
 
+        #gps-status {
+            font-size: 13px; color: #6b6b8a; text-align: center;
+            padding: 8px 16px; border-radius: 20px; border: 1px solid #2a2040;
+        }
+        body.night #gps-status { background: #1a1428; }
+        body.day #gps-status { background: white; }
+
         #status {
             position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
             padding: 8px 18px; border-radius: 20px; font-size: 13px;
             z-index: 1000; white-space: nowrap; border: 1px solid #2a2040;
         }
         body.night #status { background: #1a1428; color: #6b6b8a; }
-        body.day #status { background: white; color: #444; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        body.day #status { background: white; color: #444; }
 
         #mode-toggle, #add-btn {
             position: absolute; padding: 7px 14px;
@@ -108,9 +115,10 @@
 
 <div id="signup">
     <div class="logo-wrap">
-        <h1>No Shit <span>💩</span></h1>
+        <h1>No Sh*t <span>💩</span></h1>
         <div class="slogan">"Nature's calling and we're here to assist"</div>
     </div>
+    <div id="gps-status">📍 Requesting your location...</div>
     <p style="color:#6b6b8a;font-size:14px;text-align:center;">Who are you?</p>
     <div class="gender-pick">
         <div class="gender-btn" onclick="startMap('male')">
@@ -125,7 +133,7 @@
 </div>
 
 <div id="map"></div>
-<div id="status" style="display:none;">Finding your location...</div>
+<div id="status" style="display:none;">Loading bathrooms...</div>
 <button id="mode-toggle" style="display:none;" onclick="toggleMode()">🌙 Night</button>
 <button id="add-btn" style="display:none;" onclick="showAddModal()">+ Add Bathroom</button>
 
@@ -148,9 +156,33 @@
     var addingMode = false;
     var pendingLocation = null;
     var PROXIMITY_METERS = 200;
-
     var maleIcon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iMjY3LjAwMDAwMHB0IiBoZWlnaHQ9IjU1MS4wMDAwMDBwdCIgdmlld0JveD0iMCAwIDI2Ny4wMDAwMDAgNTUxLjAwMDAwMCIKIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPgo8bWV0YWRhdGE+CkNyZWF0ZWQgYnkgcG90cmFjZSAxLjE2LCB3cml0dGVuIGJ5IFBldGVyIFNlbGluZ2VyIDIwMDEtMjAxOQo8L21ldGFkYXRhPgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1NTEuMDAwMDAwKSBzY2FsZSgwLjEwMDAwMCwtMC4xMDAwMDApIgpmaWxsPSIjMDAwMDAwIiBzdHJva2U9Im5vbmUiPgo8cGF0aCBkPSJNMTA1MyA1MDY5IGMtNzEgLTI3IC0xNTUgLTEwNiAtMTkwIC0xNzcgLTIzIC00OSAtMjcgLTcwIC0yOCAtMTQ3IDAKLTc3IDQgLTk4IDI3IC0xNDcgNzAgLTE1MSAyNDEgLTIzNCAzOTggLTE5NCA3MyAxOSAxNTYgNzAgMTk1IDEyMiA1MyA2OSA2OQoxMjIgNjkgMjE5IDAgNzggLTMgOTggLTI3IDE0NyAtMzYgNzMgLTExOSAxNTAgLTE5MiAxNzcgLTc0IDI4IC0xODAgMjcgLTI1MgoweiIvPgo8cGF0aCBkPSJNNjIwIDQyMjAgYy0xMzEgLTI0IC0yMzQgLTk0IC0zMDMgLTIwNiAtNTggLTk0IC01NyAtNjkgLTU3IC0xMDE2IDAKLTk0NiAtMyAtODk0IDU3IC05NDkgNDEgLTM4IDY2IC00OSAxMTcgLTQ5IDgxIDAgMTM0IDMzIDE2NyAxMDUgMTggMzggMTkgODMKMTkgODMxIDAgNjAxIDMgNzkzIDEyIDgwMiAxOSAxOSA2NiAxNSA3OCAtNyA3IC0xMyAxMCAtNTU4IDEwIC0xNjkwIDAgLTExNTUKMyAtMTY3OCAxMSAtMTY5OCAxMyAtMzQgNTUgLTgwIDkxIC05OSAxNSAtOCA1MSAtMTQgODEgLTE0IDQ0IDAgNjIgNSA5NSAzMAoyMyAxNiA1MSA0OCA2MiA2OSAyMCAzOSAyMCA1NiAyMCA4ODkgMCA1ODAgMyA4NTkgMTEgODgwIDI5IDgzIDE0OSA4MyAxNzggMAo4IC0yMSAxMSAtMzAwIDExIC04NzggMCAtOTIzIC0yIC04ODcgNTcgLTk0MSA0MiAtNDAgNjYgLTQ5IDEyNSAtNDkgNjkgMCAxMzAKMzcgMTU4IDk2IDIwIDQwIDIwIDY5IDIwIDE3MTMgMCAxMTM0IDMgMTY3OSAxMCAxNjkyIDEyIDIyIDU5IDI2IDc4IDcgOSAtOQoxMiAtMjAxIDEyIC04MDIgMCAtNzgyIDAgLTc5MCAyMSAtODMzIDMxIC02NCA3OCAtOTYgMTUwIC0xMDEgNTAgLTQgNjUgMCAxMDQKMjIgMjggMTcgNTIgNDEgNjUgNjYgMjAgMzggMjAgNTkgMjAgOTEwIDAgODU0IDAgODcyIC0yMSA5MzIgLTQzIDEyOCAtMTM3CjIyMiAtMjc0IDI3NCAtNDYgMTcgLTg5IDE4IC01OTUgMjAgLTMwMCAxIC01NjUgLTIgLTU5MCAtNnoiLz4KPC9nPgo8L3N2Zz4K";
     var femaleIcon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iMzM4LjAwMDAwMHB0IiBoZWlnaHQ9IjU0Mi4wMDAwMDBwdCIgdmlld0JveD0iMCAwIDMzOC4wMDAwMDAgNTQyLjAwMDAwMCIKIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPgo8bWV0YWRhdGE+CkNyZWF0ZWQgYnkgcG90cmFjZSAxLjE2LCB3cml0dGVuIGJ5IFBldGVyIFNlbGluZ2VyIDIwMDEtMjAxOQo8L21ldGFkYXRhPgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCw1NDIuMDAwMDAwKSBzY2FsZSgwLjEwMDAwMCwtMC4xMDAwMDApIgpmaWxsPSIjMDAwMDAwIiBzdHJva2U9Im5vbmUiPgo8cGF0aCBkPSJNMTYxMCA1MDI2IGMtMTE3IC0yNSAtMjE3IC0xMDUgLTI2OCAtMjE0IC0yNCAtNTAgLTI3IC03MCAtMjcgLTE1NwowIC05MyAyIC0xMDUgMzMgLTE2NyA2NyAtMTM3IDE4NyAtMjEyIDM0MiAtMjEyIDE1NSAwIDI3NSA3NSAzNDIgMjEyIDMxIDYyCjMzIDc0IDMzIDE2NyAwIDg3IC0zIDEwNyAtMjYgMTU1IC01NSAxMTUgLTE2MCAxOTcgLTI4MyAyMTkgLTcwIDEzIC03NSAxMwotMTQ2IC0zeiIvPgo8cGF0aCBkPSJNMTEzNCA0MTE5IGMtNzMgLTI4IC0xMzcgLTg4IC0xNzMgLTE2MiAtMjEgLTQzIC03OSAtMjU3IC0xOTEgLTcwOAotMTUxIC02MDIgLTE2MSAtNjQ5IC0xNTAgLTY4OCAzOSAtMTQ1IDIyMSAtMTc4IDMwNiAtNTQgMTMgMjAgODcgMjk3IDIxNyA4MjAKMTA4IDQzNCAxOTcgNzk0IDE5NyA4MDEgMCAyMCAtMTQ2IDE0IC0yMDYgLTl6Ii8+CjxwYXRoIGQ9Ik0xNDU1IDQxMjggYy0yIC03IC0xNDAgLTU1NSAtMzA1IC0xMjE4IC0xNjUgLTY2MyAtMzAzIC0xMjEzIC0zMDYKLTEyMjIgLTUgLTE2IDEyIC0xOCAyMjggLTIwIGwyMzMgLTMgNSAtNjM1IGM1IC02MzEgNSAtNjM1IDI3IC02NzAgNzQgLTExOQoyNjQgLTkwIDMwMiA0NSA3IDI3IDExIDIzOSAxMSA2NTMgbDAgNjEyIDQwIDAgMzkgMCAzIC02MzIgYzMgLTU3OCA1IC02MzYgMjAKLTY2NSAzOCAtNjggMTIxIC0xMDQgMTkzIC04MyA0MCAxMiA4NyA0OCAxMDggODUgOSAxNCAxMyAxOTggMTcgNjU1IGw1IDYzNQoyMzMgMyAyMzIgMiAtNyAyOCBjLTMgMTUgLTE0MiA1NjkgLTMwOCAxMjMyIGwtMzAxIDEyMDUgLTIzMiAzIGMtMTgxIDIgLTIzMwowIC0yMzcgLTEweiIvPgo8cGF0aCBkPSJNMjA0MCA0MTI5IGMwIC03IDg5IC0zNjkgMTk3IC04MDMgMTI5IC01MTYgMjA0IC04MDAgMjE4IC04MTkgMzAKLTQ1IDY4IC02OSAxMTggLTc0IDg4IC0xMCAxNjQgNDEgMTg3IDEyOCAxMCAzOCAwIDg4IC0xNTEgNjkyIC05NCAzNzggLTE3Mgo2NzIgLTE4NiA3MDAgLTM0IDY5IC04MyAxMTkgLTE1MCAxNTMgLTQ4IDI0IC03MyAzMCAtMTQ1IDMyIC02OCAzIC04OCAxIC04OAotOXoiLz4KPC9nPgo8L3N2Zz4K";
+
+    // Request GPS immediately on page load
+    function initGPS() {
+        if (!navigator.geolocation) {
+            document.getElementById('gps-status').innerText = '❌ GPS not supported';
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                userLat = pos.coords.latitude;
+                userLon = pos.coords.longitude;
+                document.getElementById('gps-status').innerText = '✅ Location found!';
+                setTimeout(() => {
+                    var el = document.getElementById('gps-status');
+                    if (el) el.style.display = 'none';
+                }, 2000);
+            },
+            function(err) {
+                document.getElementById('gps-status').innerText = '⚠️ Enable location for best experience';
+            },
+            { enableHighAccuracy: true, timeout: 15000 }
+        );
+    }
+
+    initGPS();
 
     function detectDayNight() {
         var hour = new Date().getHours();
@@ -176,17 +208,17 @@
 
     function getDistance(lat1, lon1, lat2, lon2) {
         var R = 6371000;
-        var dLat = (lat2 - lat1) * Math.PI / 180;
-        var dLon = (lon2 - lon1) * Math.PI / 180;
-        var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
+        var dLat = (lat2-lat1) * Math.PI/180;
+        var dLon = (lon2-lon1) * Math.PI/180;
+        var a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+                Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
+                Math.sin(dLon/2)*Math.sin(dLon/2);
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    function isNearby(bathroomLat, bathroomLon) {
+    function isNearby(batLat, batLon) {
         if (userLat === null) return false;
-        return getDistance(userLat, userLon, bathroomLat, bathroomLon) <= PROXIMITY_METERS;
+        return getDistance(userLat, userLon, batLat, batLon) <= PROXIMITY_METERS;
     }
 
     function startMap(gender) {
@@ -199,7 +231,11 @@
 
         detectDayNight();
 
-        map = L.map('map').setView([31.5, 34.9], 8);
+        var startView = (userLat !== null)
+            ? [userLat, userLon] : [31.5, 34.9];
+        var startZoom = (userLat !== null) ? 14 : 8;
+
+        map = L.map('map').setView(startView, startZoom);
         L.tileLayer(isNight
             ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
             : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -221,19 +257,25 @@
             iconSize: [32, 64], iconAnchor: [16, 64]
         });
 
-        navigator.geolocation.watchPosition(function(pos) {
-            userLat = pos.coords.latitude;
-            userLon = pos.coords.longitude;
-            if (userMarker) {
-                userMarker.setLatLng([userLat, userLon]);
-            } else {
-                userMarker = L.marker([userLat, userLon], { icon: gpsIcon })
-                    .addTo(map).bindPopup('📍 You are here');
-                map.setView([userLat, userLon], 14);
-            }
-        }, function(err) {
-            console.log('GPS:', err.message);
-        }, { enableHighAccuracy: true, timeout: 10000 });
+        navigator.geolocation.watchPosition(
+            function(pos) {
+                userLat = pos.coords.latitude;
+                userLon = pos.coords.longitude;
+                if (userMarker) {
+                    userMarker.setLatLng([userLat, userLon]);
+                } else {
+                    userMarker = L.marker([userLat, userLon], { icon: gpsIcon })
+                        .addTo(map).bindPopup('📍 You are here');
+                    map.setView([userLat, userLon], 15);
+                    document.getElementById('status').innerText = '✅ Located!';
+                    setTimeout(() => document.getElementById('status').style.display = 'none', 2000);
+                }
+            },
+            function(err) {
+                document.getElementById('status').innerText = '⚠️ ' + err.message;
+            },
+            { enableHighAccuracy: true, timeout: 15000 }
+        );
     }
 
     function loadBathrooms() {
@@ -243,6 +285,9 @@
                 data.bathrooms.forEach(addBathroomMarker);
                 document.getElementById('status').innerText = '✅ ' + data.count + ' bathrooms in Israel';
                 setTimeout(() => document.getElementById('status').style.display = 'none', 3000);
+            })
+            .catch(err => {
+                document.getElementById('status').innerText = '❌ Could not load bathrooms';
             });
     }
 
@@ -250,7 +295,7 @@
         var toiletIcon = L.divIcon({
             html: '<div style="font-size:22px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.4));">'
                 + (b.user_added ? '🆕' : '🚽') + '</div>',
-            iconSize: [28, 28], iconAnchor: [14, 14], className: ''
+            iconSize: [28,28], iconAnchor: [14,14], className: ''
         });
         var marker = L.marker([b.lat, b.lon], { icon: toiletIcon }).addTo(map);
         marker.bindPopup(buildPopup(b), { maxWidth: 260 });
@@ -301,7 +346,7 @@
             if (data.reports.length === 0) {
                 el.innerText = 'No reports yet — be the first!';
             } else {
-                var latest = data.reports[data.reports.length - 1];
+                var latest = data.reports[data.reports.length-1];
                 el.innerHTML = '<b>Latest:</b> ' + latest.status
                     + ' <small style="color:#6b6b8a">' + latest.timestamp.slice(11,16) + '</small>';
             }
@@ -333,7 +378,7 @@
                 el.innerText = 'No reviews yet';
             } else {
                 el.innerHTML = data.reviews.slice(-3).reverse().map(r =>
-                    '<div class="review-item">' + (r.gender === 'male' ? '🚹' : '🚺') + ' ' + r.text + '</div>'
+                    '<div class="review-item">' + (r.gender==='male' ? '🚹' : '🚺') + ' ' + r.text + '</div>'
                 ).join('');
             }
         });
@@ -346,7 +391,7 @@
         fetch(API + '/review', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ bathroom_id: id, text: text, gender: userGender })
+            body: JSON.stringify({ bathroom_id: id, text, gender: userGender })
         }).then(r => r.json()).then(() => {
             input.value = '';
             loadReviews(id);
@@ -377,12 +422,7 @@
         fetch(API + '/bathroom/add', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                lat: pendingLocation.lat,
-                lon: pendingLocation.lng,
-                name: name,
-                note: note
-            })
+            body: JSON.stringify({ lat: pendingLocation.lat, lon: pendingLocation.lng, name, note })
         }).then(r => r.json()).then(data => {
             addBathroomMarker(data.bathroom);
             hideAddModal();
